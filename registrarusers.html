@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+</head>
+<body>
+  <h2>Registro de nuevo usuario</h2>
+  <input type="email" id="email" placeholder="Correo electrónico" required><br>
+  <input type="password" id="password" placeholder="Contraseña" required><br>
+  <button onclick="register()">Registrarse</button>
+  <p id="error" style="color:red;"></p>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDoTNjnjkkgUBDaVI2To5ScA83_q6ZMy-s",
+      authDomain: "gamers-a1763.firebaseapp.com",
+      projectId: "gamers-a1763"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    async function register() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        await firebase.auth().createUserWithEmailAndPassword(email, password);
+        alert("Usuario registrado correctamente.");
+        window.location.href = "login.html";
+      } catch (error) {
+        document.getElementById("error").textContent = "Error: " + error.message;
+      }
+    }
+  </script>
+</body>
+</html>

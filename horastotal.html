@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Horas Registradas por Mes</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f9;
+      padding: 50px;
+      text-align: center;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: inline-block;
+      width: 100%;
+      max-width: 600px;
+    }
+    h1 {
+      color: #007BFF;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Total de Horas por Mes</h1>
+    <ul id="listaMeses">
+      <li>Cargando datos...</li>
+    </ul>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDoTNjnjkkgUBDaVI2To5ScA83_q6ZMy-s",
+      authDomain: "gamers-a1763.firebaseapp.com",
+      projectId: "gamers-a1763",
+      storageBucket: "gamers-a1763.appspot.com",
+      messagingSenderId: "279036766390",
+      appId: "1:279036766390:web:e67ce235630f444d0f5e17"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const mesesNombres = [
+      "enero", "febrero", "marzo", "abril", "mayo", "junio",
+      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    ];
+
+    async function contarHorasPorMes() {
+      const snapshot = await getDocs(collection(db, "reservas"));
+      const conteoPorMes = {};
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const fechaStr = data.fecha; // formato YYYY-MM-DD
+        if (!fechaStr) return;
+
+        const fecha = new Date(fechaStr);
+        if (isNaN(fecha)) return;
+
+        const mes = fecha.getMonth();  // 0-11
+        const año = fecha.getFullYear();
+        const clave = `${año}-${mes}`; // Ej: "2025-4"
+
+        conteoPorMes[clave] = (conteoPorMes[clave] || 0) + 1;
+      });
+
+      // Convertir a array y ordenar por fecha descendente
+      const ordenado = Object.entries(conteoPorMes).sort(([a], [b]) => b.localeCompare(a));
+
+      const lista = document.getElementById("listaMeses");
+      lista.innerHTML = '';
+
+      ordenado.forEach(([clave, total]) => {
+        const [año, mes] = clave.split('-').map(Number);
+        const nombreMes = mesesNombres[mes];
+        const item = document.createElement('li');
+        item.textContent = `${nombreMes} ${año}: ${total} hora(s)`;
+        lista.appendChild(item);
+      });
+    }
+
+    contarHorasPorMes();
+  </script>
+</body>
+</html>

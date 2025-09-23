@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Calendario de Reservas</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      text-align: center;
+      padding: 8px;
+    }
+
+    .libre {
+      background-color: #d4edda;
+      cursor: pointer;
+    }
+
+    .ocupado {
+      background-color: #f8d7da;
+      cursor: pointer;
+    }
+
+    #reservaModal {
+      display: none;
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translate(-50%, 0);
+      background-color: white;
+      padding: 20px;
+      border: 2px solid #ccc;
+      z-index: 1000;
+    }
+
+    #reservaModal button {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Calendario de Reservas</h2>
+
+  <label for="fecha">Selecciona una fecha:</label>
+  <input type="date" id="fecha" required>
+
+  <p id="totalReservas">Total de reservas activas: 0</p>
+
+  <table id="calendario">
+    <thead>
+      <tr>
+        <th>Hora</th>
+        <th>Oficina 1</th>
+        <th>Oficina 2</th>
+        <th>Oficina 3</th>
+        <th>Oficina 4</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Filas generadas por JS -->
+    </tbody>
+  </table>
+
+  <div>
+    <h3>Reservar horario</h3>
+    <label for="cliente">Cliente:</label>
+    <input type="text" id="cliente" required>
+    <label for="telefono">Teléfono:</label>
+    <input type="text" id="telefono" required>
+    <label for="observaciones">Observaciones:</label>
+    <input type="text" id="observaciones">
+    <label><input type="checkbox" id="reservarTodosLosDias"> Reservar este horario todos los días hábiles</label>
+    <button id="reservar">Reservar</button>
+  </div>
+
+  <div id="eliminarReservas">
+    <h3>Eliminar todas las reservas de un cliente</h3>
+    <label for="clienteBorrar">Nombre del cliente:</label>
+    <input type="text" id="clienteBorrar">
+    <button id="eliminarReservasCliente">Eliminar reservas</button>
+  </div>
+
+  <div id="reservaModal">
+    <p id="modalCliente"></p>
+    <p id="modalTelefono"></p>
+    <p id="modalEmail"></p>
+    <p id="modalObs"></p>
+    <button id="eliminarReserva">Eliminar</button>
+    <button onclick="document.getElementById('reservaModal').style.display='none'">Cerrar</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyARb-IlnwskKNtwQh2jUADBFcoC2Po5gDQ",
+      authDomain: "reserva-turno.firebaseapp.com",
+      projectId: "reserva-turno",
+      storageBucket: "reserva-turno.appspot.com",
+      messagingSenderId: "324299729782",
+      appId: "1:324299729782:web:2e4505cd0dc5799f18e36e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const calendario = document.getElementById("calendario").getElementsByTagName("tbody")[0];
+    const fechaInput = document.getElementById("fecha");
+    const totalReservas = document.getElementById("totalReservas");
+    const clienteInput = document.getElementById("cliente");
+    const telefonoInput = document.getElementById("telefono");
+    const observacionesInput = document.getElementById("observaciones");
+    const reservarTodosLosDias = document.getElementById("reservarTodosLosDias");
+    const modal = document.getElementById("reservaModal");
+    const eliminarReservaBtn = document.getElementById("eliminarReserva");
+    let celdaSeleccionada = null;
+    let reservaIdActual = null;
+
+    // Crear filas del calendario (9:00 a 21:00)
+    for (let hora = 9; hora <= 21; hora++) {
+      const fila = calendario.insertRow();
+      const celdaHora = fila.insertCell();
+      celdaHora.textContent = `${hora}:00`;
+
+      for (let oficina = 1; oficina <= 4; oficina++) {
+        const celda = fila.insertCell();
+        celda.dataset.hora = `${hora}:00`;
+        celda.dataset.oficina = oficina;
+        celda.className = "libre";
+        celda.addEventListener("click", () => gestionarReserva(celda));
+      }
+    }
+
+    fechaInput.addEventListener("change", actualizarCalendario);
+
+    async function gestionarReserva(celda) {
+      if (celda.className === "libre") {
+        celdaSeleccionada = celda;
+        clienteInput.focus();
+      } else {
+        const fecha = fechaInput.value;
+        const hora = celda.dataset.hora;
+        const oficina = celda.dataset.oficina;
+
+        const q = query(collection(db, "reservas"),
+                        where("fecha", "==", fecha),
+                        where("hora", "==", hora),
+                        where("oficina", "==", oficina));
+        const snapshot = await getDocs(q);
+
+        if (!snapshot.empty) {
+          const reserva = snapshot.docs[0].data();
+          reservaIdActual = snapshot.docs[0].id;
+
+          document.getElementById("modalCliente").textContent = "Cliente: " + reserva.cliente;
+          document.getElementById("modalTelefono").textContent = "Teléfono: " + reserva.telefono;
+          document.getElementById("modalEmail").textContent = "";
+          document.getElementById("modalObs").textContent = "Observaciones: " + (reserva.observaciones || "");
+
+          modal.style.display = "block";
+        }
+      }
+    }
+
+    document.getElementById("reservar").addEventListener("click", async () => {
+      const cliente = clienteInput.value.trim();
+      const telefono = telefonoInput.value.trim();
+      const fecha = fechaInput.value;
+      const obs = observacionesInput.value.trim();
+
+      if (!cliente || !telefono || !fecha || !celdaSeleccionada) {
+        alert("Completa todos los campos y selecciona un horario.");
+        return;
+      }
+
+      const hora = celdaSeleccionada.dataset.hora;
+      const oficina = celdaSeleccionada.dataset.oficina;
+
+      if (reservarTodosLosDias.checked) {
+        const dias = generarDiasHabiles(fecha, 90);
+        for (const dia of dias) {
+          await addDoc(collection(db, "reservas"), {
+            cliente, telefono, fecha: dia, hora, oficina, observaciones: obs
+          });
+        }
+        alert("Reservas creadas para todos los días hábiles.");
+      } else {
+        await addDoc(collection(db, "reservas"), {
+          cliente, telefono, fecha, hora, oficina, observaciones: obs
+        });
+      }
+
+      clienteInput.value = "";
+      telefonoInput.value = "";
+      observacionesInput.value = "";
+      reservarTodosLosDias.checked = false;
+      actualizarCalendario();
+    });
+
+    function generarDiasHabiles(fechaInicio, cantidadDias) {
+      const dias = [];
+      const fecha = new Date(fechaInicio);
+      for (let i = 0; dias.length < cantidadDias; i++) {
+        const nueva = new Date(fecha);
+        nueva.setDate(nueva.getDate() + i);
+        const diaSemana = nueva.getDay();
+        if (diaSemana !== 0 && diaSemana !== 6) {
+          dias.push(nueva.toISOString().split("T")[0]);
+        }
+      }
+      return dias;
+    }
+
+    async function actualizarCalendario() {
+      for (const celda of calendario.getElementsByTagName("td")) {
+        if (celda.dataset.hora) {
+          celda.className = "libre";
+          celda.textContent = "";
+        }
+      }
+      await escucharReservas();
+    }
+
+    async function escucharReservas() {
+      const fecha = fechaInput.value;
+      const reservasRef = collection(db, "reservas");
+      const q = query(reservasRef, where("fecha", "==", fecha));
+      const snapshot = await getDocs(q);
+
+      let cantidad = 0;
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const celda = document.querySelector(`td[data-hora="${data.hora}"][data-oficina="${data.oficina}"]`);
+        if (celda) {
+          celda.className = "ocupado";
+          celda.textContent = data.cliente;
+          cantidad++;
+        }
+      });
+
+      totalReservas.textContent = `Total de reservas activas: ${cantidad}`;
+    }
+
+    eliminarReservaBtn.addEventListener("click", async () => {
+      if (reservaIdActual) {
+        await deleteDoc(doc(db, "reservas", reservaIdActual));
+        modal.style.display = "none";
+        actualizarCalendario();
+      }
+    });
+
+    document.getElementById("eliminarReservasCliente").addEventListener("click", async () => {
+      const cliente = document.getElementById("clienteBorrar").value.trim();
+      if (!cliente) {
+        alert("Ingresa el nombre del cliente.");
+        return;
+      }
+
+      const q = query(collection(db, "reservas"), where("cliente", "==", cliente));
+      const snapshot = await getDocs(q);
+      const confirmacion = confirm(`¿Eliminar ${snapshot.size} reservas de ${cliente}?`);
+      if (!confirmacion) return;
+
+      snapshot.forEach(async (docSnap) => {
+        await deleteDoc(doc(db, "reservas", docSnap.id));
+      });
+
+      alert("Reservas eliminadas.");
+      actualizarCalendario();
+    });
+  </script>
+</body>
+</html>

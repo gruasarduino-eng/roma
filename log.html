@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reserva con Firebase</title>
+  <script type="module">
+    // Importar Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      getDoc,
+      addDoc,
+      collection
+    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+    // Tu configuración de Firebase
+ const firebaseConfig = {
+      apiKey: "AIzaSyDoTNjnjkkgUBDaVI2To5ScA83_q6ZMy-s",
+      authDomain: "gamers-a1763.firebaseapp.com",
+      projectId: "gamers-a1763",
+      storageBucket: "gamers-a1763.appspot.com",
+      messagingSenderId: "279036766390",
+      appId: "1:279036766390:web:e67ce235630f444d0f5e17"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Registro
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const nombre = document.getElementById("regNombre").value;
+      const email = document.getElementById("regEmail").value;
+      const pass = document.getElementById("regPass").value;
+
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        await setDoc(doc(db, "usuarios", cred.user.uid), {
+          nombre: nombre,
+          email: email,
+          tipo: "cliente"
+        });
+        alert("Registrado con éxito");
+      } catch (error) {
+        alert("Error al registrar: " + error.message);
+      }
+    });
+
+    // Login
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value;
+      const pass = document.getElementById("loginPass").value;
+
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        alert("Sesión iniciada");
+      } catch (error) {
+        alert("Error al iniciar sesión: " + error.message);
+      }
+    });
+
+    // Escuchar cambios de sesión
+    onAuthStateChanged(auth, async (user) => {
+      const userInfo = document.getElementById("userInfo");
+      const reservaSection = document.getElementById("reservaSection");
+
+      if (user) {
+        const docSnap = await getDoc(doc(db, "usuarios", user.uid));
+        const nombre = docSnap.data().nombre;
+
+        userInfo.innerText = `Conectado como: ${nombre}`;
+        reservaSection.style.display = "block";
+      } else {
+        userInfo.innerText = "No conectado";
+        reservaSection.style.display = "none";
+      }
+    });
+
+    // Reservar
+    document.getElementById("reservaForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fecha = document.getElementById("reservaFecha").value;
+      const hora = document.getElementById("reservaHora").value;
+      const oficina = document.getElementById("reservaOficina").value;
+
+      const user = auth.currentUser;
+      const docSnap = await getDoc(doc(db, "usuarios", user.uid));
+      const nombre = docSnap.data().nombre;
+
+      const reserva = {
+        uid: user.uid,
+        nombre: nombre,
+        oficina: oficina,
+        fecha: fecha,
+        hora: hora,
+        timestamp: new Date()
+      };
+
+      try {
+        await addDoc(collection(db, "reservas"), reserva);
+        alert("Reserva realizada");
+      } catch (error) {
+        alert("Error al reservar: " + error.message);
+      }
+    });
+  </script>
+</head>
+<body>
+  <h2>Registro</h2>
+  <form id="registerForm">
+    <input type="text" id="regNombre" placeholder="Nombre completo" required><br>
+    <input type="email" id="regEmail" placeholder="Correo" required><br>
+    <input type="password" id="regPass" placeholder="Contraseña" required><br>
+    <button type="submit">Registrarse</button>
+  </form>
+
+  <h2>Iniciar sesión</h2>
+  <form id="loginForm">
+    <input type="email" id="loginEmail" placeholder="Correo" required><br>
+    <input type="password" id="loginPass" placeholder="Contraseña" required><br>
+    <button type="submit">Entrar</button>
+  </form>
+
+  <h2 id="userInfo">No conectado</h2>
+
+  <div id="reservaSection" style="display:none;">
+    <h2>Hacer una reserva</h2>
+    <form id="reservaForm">
+      <input type="date" id="reservaFecha" required><br>
+      <input type="time" id="reservaHora" required><br>
+      <select id="reservaOficina" required>
+        <option value="">Seleccione oficina</option>
+        <option value="Oficina 1">Oficina 1</option>
+        <option value="Oficina 2">Oficina 2</option>
+        <option value="Oficina 3">Oficina 3</option>
+      </select><br>
+      <button type="submit">Reservar</button>
+    </form>
+  </div>
+</body>
+</html>

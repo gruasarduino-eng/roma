@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro y Visualización de Clientes</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: left;
+    }
+    button {
+      margin: 2px;
+    }
+    input[type="text"], input[type="number"], input[type="password"] {
+      padding: 4px;
+      margin: 4px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Registrar Cliente</h2>
+  <form id="clienteForm">
+    <label for="nombre">Nombre del Cliente:</label><br>
+    <input type="text" id="nombre" required><br>
+
+    <label for="horas">Horas Contratadas:</label><br>
+    <input type="number" id="horas" required min="1"><br>
+
+    <label for="password">Contraseña:</label><br>
+    <input type="password" id="password" required><br>
+
+    <button type="submit">Guardar Cliente</button>
+  </form>
+  <p id="mensaje"></p>
+
+  <h2>Clientes Registrados</h2>
+
+  <label for="buscar">Buscar por nombre:</label>
+  <input type="text" id="buscar" placeholder="Escribe un nombre...">
+
+  <table id="clientesTabla">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Horas</th>
+        <th>Contraseña</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="clientesBody">
+      <!-- Se cargan los clientes aquí -->
+    </tbody>
+    <tfoot>
+      <tr>
+        <td><strong>Total</strong></td>
+        <td id="totalHoras"><strong>0</strong></td>
+        <td colspan="2"></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDoTNjnjkkgUBDaVI2To5ScA83_q6ZMy-s",
+      authDomain: "gamers-a1763.firebaseapp.com",
+      projectId: "gamers-a1763",
+      storageBucket: "gamers-a1763.appspot.com",
+      messagingSenderId: "279036766390",
+      appId: "1:279036766390:web:e67ce235630f444d0f5e17"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const tbody = document.getElementById("clientesBody");
+    const totalHorasEl = document.getElementById("totalHoras");
+    const buscarInput = document.getElementById("buscar");
+
+    // Formulario de registro
+    document.getElementById("clienteForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const nombre = document.getElementById("nombre").value.trim();
+      const horas = parseInt(document.getElementById("horas").value);
+      const password = document.getElementById("password").value.trim();
+
+      if (!nombre || isNaN(horas) || horas <= 0 || !password) {
+        document.getElementById("mensaje").textContent = "Completa todos los campos correctamente.";
+        return;
+      }
+
+      try {
+        await db.collection("clientes").doc(nombre).set({
+          nombre: nombre,
+          horas_contratadas: horas,
+          password: password
+        });
+
+        document.getElementById("mensaje").textContent = `Cliente "${nombre}" registrado con éxito.`;
+        document.getElementById("clienteForm").reset();
+        cargarClientes();
+      } catch (error) {
+        console.error("Error al guardar cliente:", error);
+        document.getElementById("mensaje").textContent = "Error al registrar el cliente.";
+      }
+    });
+
+    // Cargar y mostrar clientes
+    async function cargarClientes() {
+      tbody.innerHTML = "";
+      let totalHoras = 0;
+      const filtro = buscarInput.value.trim().toLowerCase();
+
+      const snapshot = await db.collection("clientes").get();
+      snapshot.forEach(doc => {
+        const cliente = doc.data();
+
+        if (!cliente.nombre.toLowerCase().includes(filtro)) return;
+
+        const tr = document.createElement("tr");
+
+        // Nombre
+        const tdNombre = document.createElement("td");
+        tdNombre.textContent = cliente.nombre;
+
+        // Horas editables
+        const tdHoras = document.createElement("td");
+        const inputHoras = document.createElement("input");
+        inputHoras.type = "number";
+        inputHoras.value = cliente.horas_contratadas;
+        inputHoras.min = 0;
+        inputHoras.style.width = "60px";
+        tdHoras.appendChild(inputHoras);
+
+        // Contraseña oculta
+        const tdPass = document.createElement("td");
+        const passInput = document.createElement("input");
+        passInput.type = "password";
+        passInput.value = cliente.password;
+        passInput.readOnly = true;
+        passInput.style.width = "100px";
+        const toggleBtn = document.createElement("button");
+        toggleBtn.textContent = "Ver";
+        toggleBtn.onclick = () => {
+          passInput.type = passInput.type === "password" ? "text" : "password";
+          toggleBtn.textContent = passInput.type === "password" ? "Ver" : "Ocultar";
+        };
+        tdPass.appendChild(passInput);
+        tdPass.appendChild(toggleBtn);
+
+        // Acciones
+        const tdAcciones = document.createElement("td");
+
+        const btnGuardar = document.createElement("button");
+        btnGuardar.textContent = "Guardar";
+        btnGuardar.onclick = async () => {
+          const nuevasHoras = parseInt(inputHoras.value);
+          if (!isNaN(nuevasHoras) && nuevasHoras >= 0) {
+            await db.collection("clientes").doc(cliente.nombre).update({
+              horas_contratadas: nuevasHoras
+            });
+            alert("Horas actualizadas");
+            cargarClientes();
+          }
+        };
+
+        const btnEliminar = document.createElement("button");
+        btnEliminar.textContent = "Eliminar";
+        btnEliminar.onclick = async () => {
+          if (confirm(`¿Eliminar a "${cliente.nombre}"?`)) {
+            await db.collection("clientes").doc(cliente.nombre).delete();
+            alert("Cliente eliminado");
+            cargarClientes();
+          }
+        };
+
+        tdAcciones.appendChild(btnGuardar);
+        tdAcciones.appendChild(btnEliminar);
+
+        tr.appendChild(tdNombre);
+        tr.appendChild(tdHoras);
+        tr.appendChild(tdPass);
+        tr.appendChild(tdAcciones);
+        tbody.appendChild(tr);
+
+        totalHoras += cliente.horas_contratadas || 0;
+      });
+
+      totalHorasEl.textContent = totalHoras;
+    }
+
+    // Recargar clientes al escribir en búsqueda
+    buscarInput.addEventListener("input", cargarClientes);
+
+    // Cargar al inicio
+    cargarClientes();
+  </script>
+</body>
+</html>

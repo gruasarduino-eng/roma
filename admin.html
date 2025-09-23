@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario de Reservas de Oficinas</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+        th { background-color: #007BFF; color: white; }
+        .libre { background-color: #d4edda; cursor: pointer; }
+        .ocupado { background-color: #f8d7da; cursor: pointer; }
+        #resumen { margin-top: 20px; background: #fff; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <li class="nav-item">
+        <a class="nav-link" href="index.html">volver a home</a>
+    </li>
+    <h1>Calendario solo Administradores</h1>
+    <label for="fecha">Seleccionar fecha: </label>
+    <input type="date" id="fecha">
+    <table id="calendario">
+        <tr>
+            <th>Hora</th>
+            <th>Oficina 1</th>
+            <th>Oficina 2</th>
+            <th>Oficina arriba</th>
+            <th>Oficina 4</th>
+        </tr>
+    </table>
+    <div id="resumen">
+        <h3>Resumen de Reservas</h3>
+        <p id="totalReservas">Total de reservas activas: 0</p>
+    </div>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDoTNjnjkkgUBDaVI2To5ScA83_q6ZMy-s",
+            authDomain: "gamers-a1763.firebaseapp.com",
+            projectId: "gamers-a1763",
+            storageBucket: "gamers-a1763.appspot.com",
+            messagingSenderId: "279036766390",
+            appId: "1:279036766390:web:e67ce235630f444d0f5e17"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        const horarios = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"];
+        const calendario = document.getElementById('calendario');
+        const fechaInput = document.getElementById('fecha');
+        const totalReservas = document.getElementById('totalReservas');
+
+        function actualizarCalendario() {
+            calendario.innerHTML = `<tr><th>Hora</th><th>Recepcion</th><th>Oficina 2</th><th>Ofi arriba</th><th>Oficina 4</th></tr>`;
+            horarios.forEach(hora => {
+                const fila = document.createElement('tr');
+                fila.innerHTML = `<td>${hora}</td>`;
+                for (let i = 1; i <= 4; i++) {
+                    const celda = document.createElement('td');
+                    celda.className = 'libre';
+                    celda.textContent = 'Libre';
+                    celda.dataset.hora = hora;
+                    celda.dataset.oficina = `oficina${i}`;
+                    fila.appendChild(celda);
+                }
+                calendario.appendChild(fila);
+            });
+            escucharReservas();
+        }
+
+        async function gestionarReserva(event) {
+            const celda = event.target;
+            if (!celda.dataset.hora) return;
+            
+            const fecha = fechaInput.value;
+            const hora = celda.dataset.hora;
+            const oficina = celda.dataset.oficina;
+            
+            if (celda.classList.contains('libre')) {
+                const cliente = prompt('Ingrese el nombre del cliente:');
+                if (cliente) {
+                    try {
+                        await addDoc(collection(db, "reservas"), { fecha, hora, oficina, cliente });
+                    } catch (error) {
+                        alert("Error al reservar: " + error.message);
+                    }
+                }
+            } else {
+                if (confirm('¿Desea liberar esta reserva?')) {
+                    const reservaId = celda.dataset.id;
+                    if (reservaId) {
+                        try {
+                            await deleteDoc(doc(db, "reservas", reservaId));
+                        } catch (error) {
+                            alert("Error al eliminar la reserva: " + error.message);
+                        }
+                    }
+                }
+            }
+        }
+
+        function escucharReservas() {
+            if (!fechaInput.value) return;
+            const reservasQuery = query(collection(db, "reservas"), where("fecha", "==", fechaInput.value));
+            onSnapshot(reservasQuery, (snapshot) => {
+                const reservas = {};
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const key = `${data.hora}-${data.oficina}`;
+                    reservas[key] = { cliente: data.cliente, id: doc.id };
+                });
+                
+                document.querySelectorAll('td.libre, td.ocupado').forEach(celda => {
+                    const key = `${celda.dataset.hora}-${celda.dataset.oficina}`;
+                    if (reservas[key]) {
+                        celda.className = 'ocupado';
+                        celda.textContent = ` ${reservas[key].cliente}`;
+                        celda.dataset.id = reservas[key].id;
+                    } else {
+                        celda.className = 'libre';
+                        celda.textContent = 'Libre';
+                        delete celda.dataset.id;
+                    }
+                });
+                totalReservas.textContent = `Total de reservas activas: ${snapshot.size}`;
+            });
+        }
+
+        fechaInput.addEventListener('change', actualizarCalendario);
+        calendario.addEventListener('click', gestionarReserva);
+        
+        actualizarCalendario();
+    </script>
+</body>
+</html>

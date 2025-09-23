@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>--Calendario de Reservas-</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background-color: #007BFF; color: white; }
+    .libre { background-color: #d4edda; cursor: pointer; }
+    .ocupado { background-color: #f8d7da; cursor: pointer; }
+    #modalReserva {
+      display: none;
+      position: fixed; z-index: 100;
+      left: 0; top: 0; width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    #modalContenido {
+      background: white; padding: 20px; border-radius: 10px;
+      width: 300px; margin: 100px auto; position: relative;
+    }
+    #cerrarModal {
+      position: absolute; top: 10px; right: 15px;
+      cursor: pointer; font-weight: bold;
+    }
+    #eliminarReserva {
+      background-color: #dc3545;
+      color: white; border: none;
+      padding: 10px; width: 100%;
+      margin-top: 15px; cursor: pointer; border-radius: 5px;
+    }
+    #login input { display: block; margin: 10px 0; padding: 8px; width: 200px; }
+    #login button { padding: 8px 15px; }
+  </style>
+</head>
+<body>
+  <h1>--users Roma---</h1>
+
+  <div id="login">
+    <h2>Iniciar sesión</h2>
+    <input type="text" id="usuario" placeholder="Usuario">
+    <input type="password" id="clave" placeholder="Contraseña">
+    <button id="btnLogin">Ingresar</button>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 20px;">
+    <div>
+      <label for="fecha">login: </label>
+      <input type="date" id="fecha" />
+    </div>
+    <p id="horasTotales" style="margin: 0;">Total De horas este año: -</p>
+  </div>
+
+  <table id="calendario"></table>
+
+  <div id="modalReserva">
+    <div id="modalContenido">
+      <span id="cerrarModal">&times;</span>
+      <h3>Detalles de la Reserva</h3>
+      <p id="modalCliente"></p>
+      <p id="modalTelefono"></p>
+      <p id="modalObs"></p>
+      <button id="eliminarReserva">Eliminar Reserva</button>
+    </div>
+  </div>
+ 
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, deleteDoc, doc, query, where, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDoTNjnjkkgUBDaVI2To5ScA83_q6ZMy-s",
+      authDomain: "gamers-a1763.firebaseapp.com",
+      projectId: "gamers-a1763",
+      storageBucket: "gamers-a1763.appspot.com",
+      messagingSenderId: "279036766390",
+      appId: "1:279036766390:web:e67ce235630f444d0f5e17"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    
+
+    const usuarios = {
+  agustina: {
+    clave: "123",
+    horasDisponibles: 32
+  },
+ 
+  holistica_lu: {
+    clave: "j56",
+    horasDisponibles: 16
+  },
+    nutri_jesica: {
+    clave: "j456",
+    horasDisponibles: 1
+  },
+    
+  nutricionista: {
+    clave: "g456",
+    horasDisponibles: 32
+  },
+  lic_noi: {
+    clave: "g456",
+    horasDisponibles: 132
+  },  
+  
+  
+  lic_carla: {
+    clave: "156",
+    horasDisponibles: 24
+  },
+   
+};
+
+
+    let usuarioLogueado = null;
+
+    const horarios = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"];
+    const calendario = document.getElementById('calendario');
+    const fechaInput = document.getElementById('fecha');
+
+    const modal = document.getElementById('modalReserva');
+    const cerrarModal = document.getElementById('cerrarModal');
+    const eliminarReservaBtn = document.getElementById('eliminarReserva');
+    let reservaIdActual = null;
+
+    cerrarModal.onclick = () => modal.style.display = "none";
+    window.onclick = e => { if (e.target == modal) modal.style.display = "none"; };
+
+    document.getElementById("btnLogin").addEventListener("click", () => {
+      const user = document.getElementById("usuario").value.toLowerCase();
+      const pass = document.getElementById("clave").value;
+
+      if (usuarios[user] && usuarios[user].clave === pass) {
+
+        usuarioLogueado = user;
+        document.getElementById("login").style.display = "none";
+        document.querySelector("label[for='fecha']").style.display = "inline";
+        fechaInput.style.display = "inline";
+
+        const hoy = new Date().toISOString().split("T")[0];
+        fechaInput.value = hoy;
+        actualizarCalendario();
+        calcularHorasTotalesAnuales();
+
+      } else {
+        alert("Usuario o contraseña incorrectos.");
+      }
+    });
+
+    fechaInput.addEventListener("change", actualizarCalendario);
+
+    function actualizarCalendario() {
+      const fecha = fechaInput.value;
+      if (!fecha) return;
+
+      calendario.innerHTML = `<tr><th>Hora</th><th>Recepción</th><th>Ofi 1 (med)</th><th>Ofi 2 (1° piso)</th><th>Ofi 3 (gde)</th></tr>`;
+      horarios.forEach(hora => {
+        const fila = document.createElement('tr');
+        fila.innerHTML = `<td>${hora}</td>`;
+        for (let i = 1; i <= 4; i++) {
+          const celda = document.createElement('td');
+          celda.className = 'libre';
+          celda.textContent = 'Libre';
+          celda.dataset.hora = hora;
+          celda.dataset.oficina = `oficina${i}`;
+          celda.addEventListener('click', gestionarReserva);
+          fila.appendChild(celda);
+        }
+        calendario.appendChild(fila);
+      });
+
+      cargarReservas(fecha);
+    }
+
+    function cargarReservas(fecha) {
+      const reservasQuery = query(collection(db, "reservas"), where("fecha", "==", fecha));
+      onSnapshot(reservasQuery, (snapshot) => {
+  document.querySelectorAll('td[data-hora]').forEach(celda => {
+    celda.className = 'libre';
+    celda.textContent = 'Libre';
+    delete celda.dataset.id;
+  });
+
+  let totalHoras = 0;
+  const anioActual = new Date().getFullYear();
+
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    const selector = `td[data-hora="${data.hora}"][data-oficina="${data.oficina}"]`;
+    const celda = document.querySelector(selector);
+    if (celda) {
+      celda.className = 'ocupado';
+      celda.textContent = data.cliente;
+      celda.dataset.id = docSnap.id;
+    }
+
+    if (data.cliente === usuarioLogueado && data.fecha.startsWith(anioActual.toString())) {
+      totalHoras++;
+    }
+  });
+
+  document.getElementById("horasTotales").textContent = `Total de horas este año: ${totalHoras}`;
+
+
+
+document.getElementById("horasTotales").textContent = `Total de horas este año: ${totalHoras}`;
+
+        document.querySelectorAll('td[data-hora]').forEach(celda => {
+          celda.className = 'libre';
+          celda.textContent = 'Libre';
+          delete celda.dataset.id;
+        });
+
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          const selector = `td[data-hora="${data.hora}"][data-oficina="${data.oficina}"]`;
+          const celda = document.querySelector(selector);
+          if (celda) {
+            celda.className = 'ocupado';
+            celda.textContent = data.cliente;
+            celda.dataset.id = docSnap.id;
+          }
+        });
+      });
+    }
+
+    async function gestionarReserva(event) {
+      const celda = event.target;
+      const fecha = fechaInput.value;
+      const hora = celda.dataset.hora;
+      const oficina = celda.dataset.oficina;
+
+      if (!fecha || !hora || !oficina) return;
+
+    if (celda.classList.contains('libre')) {
+  // Contar las reservas del usuario este año
+  const reservasQuery = query(
+    collection(db, "reservas"),
+    where("cliente", "==", usuarioLogueado)
+  );
+  const snapshot = await getDocs(reservasQuery);
+
+  const anioActual = new Date().getFullYear();
+  let horasReservadas = 0;
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    if (data.fecha && data.fecha.startsWith(anioActual.toString())) {
+      horasReservadas++;
+    }
+  });
+
+  const horasPermitidas = usuarios[usuarioLogueado].horasDisponibles;
+  if (horasReservadas >= horasPermitidas) {
+    alert("Ya alcanzaste tu límite de horas disponibles este año.");
+    return;
+  }
+
+  // Si todavía tiene horas disponibles
+  const observaciones = prompt("Observaciones:");
+  await addDoc(collection(db, "reservas"), {
+    fecha, hora, oficina,
+    cliente: usuarioLogueado,
+    observaciones
+  });
+
+  calcularHorasTotalesAnuales();
+}
+ else {
+        const id = celda.dataset.id;
+        if (!id) return;
+
+        const docRef = doc(db, "reservas", id);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          document.getElementById("modalCliente").textContent = "Cliente: " + data.cliente;
+          document.getElementById("modalTelefono").textContent = "Teléfono: " + (data.telefono || "No registrado");
+          document.getElementById("modalObs").textContent = "Observaciones: " + (data.observaciones || "Ninguna");
+          reservaIdActual = id;
+
+          const hoy = new Date();
+          const fechaReserva = new Date(data.fecha + "T00:00:00");
+          const diferenciaDias = Math.floor((fechaReserva - hoy) / (1000 * 60 * 60 * 24));
+
+          if (data.cliente === usuarioLogueado && diferenciaDias >= 1) {
+            eliminarReservaBtn.style.display = "block";
+          } else {
+            eliminarReservaBtn.style.display = "none";
+          }
+
+          modal.style.display = "block";
+        }
+      }
+    }
+    import { getDocs } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+
+    async function calcularHorasTotalesAnuales() {
+  if (!usuarioLogueado) return;
+
+  const anioActual = new Date().getFullYear();
+  const reservasRef = collection(db, "reservas");
+  const snapshot = await getDocs(reservasRef);
+
+  let horasCargadas = 0;
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    if (data.cliente === usuarioLogueado && data.fecha.startsWith(anioActual.toString())) {
+      horasCargadas++;
+    }
+  });
+
+  const horasDisponibles = usuarios[usuarioLogueado].horasDisponibles;
+  const horasRestantes = horasDisponibles - horasCargadas;
+
+  const horasTotalesEl = document.getElementById("horasTotales");
+  const btnReservar = document.getElementById("btnReservar"); // botón de carga de turnos
+
+  horasTotalesEl.textContent =
+    `Horas disponibles: ${horasDisponibles} - ${horasCargadas} = ${horasRestantes}`;
+
+  // Cambiar color según horas restantes
+  if (horasRestantes <= 0) {
+    horasTotalesEl.style.color = "red";
+    horasTotalesEl.textContent += " (Sin horas disponibles)";
+    if (btnReservar) btnReservar.disabled = true; // bloquear el botón
+  } else if (horasRestantes <= 5) {
+    horasTotalesEl.style.color = "orange";
+    if (btnReservar) btnReservar.disabled = false;
+  } else {
+    horasTotalesEl.style.color = "green";
+    if (btnReservar) btnReservar.disabled = false;
+  }
+}
+
+
+    eliminarReservaBtn.addEventListener("click", async () => {
+      if (reservaIdActual && confirm("¿Eliminar esta reserva?")) {
+        await deleteDoc(doc(db, "reservas", reservaIdActual));
+        modal.style.display = "none";
+        reservaIdActual = null;
+        actualizarCalendario();
+        calcularHorasTotalesAnuales();
+
+
+      }
+    });
+  </script>
+</body>
+</html>

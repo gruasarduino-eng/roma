@@ -1,390 +1,273 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Calendario de Reservas de Oficinas</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-    th { background-color: #007BFF; color: white; }
-    .libre { background-color: #d4edda; cursor: pointer; }
-    .ocupado { background-color: #f8d7da; cursor: pointer; }
-    #resumen, #recurrente-form { background: #fff; padding: 15px; border: 1px solid #ccc; border-radius: 5px; margin-top: 30px; }
-    label { display: block; margin-top: 10px; }
-    input, select { padding: 5px; width: 100%; max-width: 300px; }
-    button { margin-top: 15px; padding: 10px 20px; }
+    <title>ROMA-Coworking</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    #modalReserva {
-      display: none;
-      position: fixed;
-      z-index: 100;
-      left: 0; top: 0; width: 100%; height: 100%;
-      background-color: rgba(0,0,0,0.5);
-    }
-    #modalContenido {
-      background: white; padding: 20px; border-radius: 10px;
-      width: 300px; margin: 100px auto; position: relative;
-    }
-    #cerrarModal {
-      position: absolute; top: 10px; right: 15px;
-      cursor: pointer; font-weight: bold;
-    }
-    #eliminarReserva {
-      background-color: #dc3545;
-      color: white;
-      border: none;
-      padding: 10px;
-      width: 100%;
-      margin-top: 15px;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-  </style>
+    <link rel="apple-touch-icon" href="assets/img/apple-icon.png">
+    <link rel="shortcut icon" type="image/x-icon" href="assets/img/favicon.ico">
+
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/templatemo.css">
+    <link rel="stylesheet" href="assets/css/custom.css">
+
+    <!-- Load fonts style after rendering the layout styles -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;200;300;400;500;700;900&display=swap">
+    <link rel="stylesheet" href="assets/css/fontawesome.min.css">
+<!--
+    
+TemplateMo 559 Zay Shop
+
+https://templatemo.com/tm-559-zay-shop
+
+-->
+<link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#007BFF">
 </head>
+
 <body>
-  <h1>Calendario solo Administradores</h1>
+    <!-- Start Top Nav -->
+    <nav class="navbar navbar-expand-lg bg-dark navbar-light d-none d-lg-block" id="templatemo_nav_top">
+        <div class="container text-light">
+            <div class="w-100 d-flex justify-content-between">
+                <div>
+                    <i class="fa fa-envelope mx-2"></i>
+                    <a class="navbar-sm-brand text-light text-decoration-none" href="mailto:roma.coworking.sl@gmail.com">roma.coworking.sl@gmail.com</a>
+                    <i class="fa fa-phone mx-2"></i>
+                    <a class="navbar-sm-brand text-light text-decoration-none" href="tel:+54-9-2665-010199">+54-9-2665-010199</a>
+                </div>
+                <div>
+                    <a class="text-light" href="https://web.facebook.com/people/RomaCowork/" target="_blank" rel="sponsored"><i class="fab fa-facebook-f fa-sm fa-fw me-2"></i></a>
+                    <a class="text-light" href="https://www.instagram.com/coworking.roma/" target="_blank"><i class="fab fa-instagram fa-sm fa-fw me-2"></i></a>
+                   
+                   
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- Close Top Nav -->
 
-  <label for="fecha">Seleccionar fecha: </label>
-  <input type="date" id="fecha" />
+    <nav class="navbar navbar-expand-lg navbar-light shadow">
+        <div class="container d-flex justify-content-between align-items-center">
+    
+            <a href="index.html">
+           <img class="card-img rounded-0 img-fluid" src="assets/img/roma/icono.jpg" style="width: 200px; height: auto;">
+            </a>
+    
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#templatemo_main_nav" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+    
+            <div class="align-self-center collapse navbar-collapse flex-fill  d-lg-flex justify-content-lg-between" id="templatemo_main_nav">
+                <div class="flex-fill">
+                    <ul class="nav navbar-nav d-flex justify-content-between mx-lg-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.html">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="about.html">Horarios</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="shop.html">Oficinas</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="contact.html">Contacto</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="pedirPassword()">Admin</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+    
+        </div>
+    </nav>
+    
+    <script>
+        function pedirPassword() {
+            const passwordCorrecta = "amor"; // Cambia esto por la contraseña que prefieras
+            const passwordIngresada = prompt("Ingrese la contraseña para acceder al panel de administración:");
+    
+            if (passwordIngresada === passwordCorrecta) {
+                window.location.href = "admin.html";
+            } else {
+                alert("Contraseña incorrecta. Acceso denegado.");
+            }
+        }
+    </script>
+    <!-- Close Header -->
 
-  <table id="calendario">
-    <tr>
-      <th>Hora</th>
-      <th>Recepcion</th>
-      <th>Ofi 1 (med)</th>
-      <th>Ofi 2 (1°piso)</th>
-      <th>Ofi 3 (gde)</th>
-    </tr>
-  </table>
-
-  <div id="resumen">
-    <h3>Resumen de Reservas</h3>
-    <p id="totalReservas">Total de reservas activas: 0</p>
-  </div>
-
-  <div id="recurrente-form">
-    <h3>Reservas Recurrentes</h3>
-    <label for="nombre">Nombre del cliente:</label>
-    <input type="text" id="nombre">
-
-    <label for="telefono">Teléfono:</label>
-    <input type="text" id="telefono">
-
-    <label for="horasContratadas">Horas contratadas:</label>
-    <input type="number" id="horasContratadas" min="1" id="horasContratadas">
-
-
-    <label for="observaciones">Observaciones:</label>
-    <input type="text" id="observaciones">
-
-    <label for="oficina">Oficina (1 a 4):</label>
-    <select id="oficina">
-      <option value="oficina1">Recepcion</option>
-      <option value="oficina2">Ofi 1 (med)</option>
-      <option value="oficina3">Ofi 2 (1°piso)</option>
-      <option value="oficina4">Ofi 3 (gde)</option>
-    </select>
-
-    <label for="diaSemana">Día de la semana:</label>
-    <select id="diaSemana">
-      <option value="0">Lunes</option>
-      <option value="1">Martes</option>
-      <option value="2">Miércoles</option>
-      <option value="3">Jueves</option>
-      <option value="4">Viernes</option>
-      <option value="5">Sábado</option>
-      <option value="6">Domingo</option>
-    </select>
-
-    <label for="desde">Hora desde:</label>
-    <input type="time" id="desde">
-
-    <label for="hasta">Hora hasta:</label>
-    <input type="time" id="hasta">
-
-    <label for="inicio">Fecha de inicio:</label>
-    <input type="date" id="inicio">
-
-    <label for="fin">Fecha de fin:</label>
-    <input type="date" id="fin">
-
-    <button id="crearRecurrentes">Crear Reservas</button>
-  </div>
-
-  <div id="modalReserva">
-    <div id="modalContenido">
-      <span id="cerrarModal">&times;</span>
-      <h3>Detalles de la Reserva</h3>
-      <p id="modalCliente"></p>
-      <p id="modalTelefono"></p>
-      <p id="modalEmail"></p>
-      <p id="modalObs"></p>
-      <button id="eliminarReserva">Eliminar Reserva</button>
+    <!-- Modal -->
+    <div class="modal fade bg-white" id="templatemo_search" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="w-100 pt-1 mb-5 text-right">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="" method="get" class="modal-content modal-body border-0 p-0">
+                <div class="input-group mb-2">
+                    <input type="text" class="form-control" id="inputModalSearch" name="q" placeholder="Search ...">
+                    <button type="submit" class="input-group-text bg-success text-light">
+                        <i class="fa fa-fw fa-search text-white"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, deleteDoc, doc, query, where, onSnapshot, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDoTNjnjkkgUBDaVI2To5ScA83_q6ZMy-s",
-      authDomain: "gamers-a1763.firebaseapp.com",
-      projectId: "gamers-a1763",
-      storageBucket: "gamers-a1763.appspot.com",
-      messagingSenderId: "279036766390",
-      appId: "1:279036766390:web:e67ce235630f444d0f5e17"
-    };
-    document.getElementById("eliminarReservasCliente").addEventListener("click", async () => {
-  const nombre = document.getElementById("clienteBorrar").value.trim();
-  if (!nombre) {
-    alert("Por favor, ingresá un nombre.");
-    return;
-  }
-
-  if (!confirm(`¿Estás seguro de eliminar TODAS las reservas de "${nombre}"? Esta acción no se puede deshacer.`)) return;
-
-  const reservasRef = collection(db, "reservas");
-  const q = query(reservasRef, where("cliente", "==", nombre));
-  const snapshot = await getDocs(q);
-
-  let eliminadas = 0;
-  for (const docu of snapshot.docs) {
-    await deleteDoc(doc(db, "reservas", docu.id));
-    eliminadas++;
-  }
-
-  alert(`Se eliminaron ${eliminadas} reserva(s) de "${nombre}".`);
-});
 
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
 
-    const horarios = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"];
-    const calendario = document.getElementById('calendario');
-    const fechaInput = document.getElementById('fecha');
-    const totalReservas = document.getElementById('totalReservas');
-    const modal = document.getElementById('modalReserva');
-    const cerrarModal = document.getElementById('cerrarModal');
-    const eliminarReservaBtn = document.getElementById('eliminarReserva');
+    <!-- Start Banner Hero -->
+    <div id="template-mo-zay-hero-carousel" class="carousel slide" data-bs-ride="carousel">
+        <ol class="carousel-indicators">
+            <li data-bs-target="#template-mo-zay-hero-carousel" data-bs-slide-to="0" class="active"></li>
+            <li data-bs-target="#template-mo-zay-hero-carousel" data-bs-slide-to="1"></li>
+            <li data-bs-target="#template-mo-zay-hero-carousel" data-bs-slide-to="2"></li>
+        </ol>
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <div class="container">
+                    <div class="row p-5">
+                        <div class="mx-auto col-md-8 col-lg-6 order-lg-last">
+                            <img class="img-fluid" src="./assets/img/roma/1.png" alt="">
+                        </div>
+                        <div class="col-lg-6 mb-0 d-flex align-items-center">
+                            <div class="text-align-left align-self-center">
+                                <h1 class="h1 text-success"><b>Espacios</b> XHORA</h1>
+                                <h3 class="h2">🛋️ Un espacio diseñado para brindar comodidad y privacidad.</h3>
+                                <p>
+                                    Si necesitas un ambiente profesional para consultas, sesiones o reuniones individuales, nuestras oficinas están listas para ofrecerte el confort y la tranquilidad que buscás. Recibe a tus clientes en un lugar elegante y equipado para tu trabajo. 
 
-    let reservaIdActual = null;
-
-    cerrarModal.onclick = () => modal.style.display = "none";
-    window.onclick = (e) => { if (e.target == modal) modal.style.display = "none"; };
-
-    function actualizarCalendario() {
-      calendario.innerHTML = `<tr><th>Hora</th><th>Recepcion</th><th>Ofi 1 (med)</th><th>Ofi 2 (1°piso)</th><th>Ofi 3 (gde)</th></tr>`;
-      horarios.forEach(hora => {
-        const fila = document.createElement('tr');
-        fila.innerHTML = `<td>${hora}</td>`;
-        for (let i = 1; i <= 4; i++) {
-          const celda = document.createElement('td');
-          celda.className = 'libre';
-          celda.textContent = 'Libre';
-          celda.dataset.hora = hora;
-          celda.dataset.oficina = `oficina${i}`;
-          celda.addEventListener('click', gestionarReserva);
-          fila.appendChild(celda);
-        }
-        calendario.appendChild(fila);
-      });
-      escucharReservas();
-    }
-
-    async function gestionarReserva(event) {
-      const celda = event.target;
-      if (!celda.dataset.hora) return;
-
-      const fecha = fechaInput.value;
-      const hora = celda.dataset.hora;
-      const oficina = celda.dataset.oficina;
-
-      if (celda.classList.contains('libre')) {
-  const cliente = prompt('Nombre del cliente:');
-  if (!cliente) return;
-
-  const telefono = prompt('Teléfono:');
-  const horasContratadasStr = prompt('¿Cuántas horas contrató este cliente en total?');
-  const horasContratadas = parseInt(horasContratadasStr);
-
-  if (!horasContratadas || isNaN(horasContratadas)) {
-    alert("Debés ingresar una cantidad válida de horas contratadas.");
-    return;
-  }
-
-  const observaciones = prompt('Observaciones:');
-
-  // Verificar cuántas reservas ya tiene este cliente
-  const reservasQuery = query(collection(db, "reservas"), where("cliente", "==", cliente));
-  const snapshot = await getDocs(reservasQuery);
-
-  if (snapshot.size >= horasContratadas) {
-    alert(`${cliente} ya alcanzó su límite de ${horasContratadas} hora(s).`);
-    return;
-  }
-
-  try {
-    await addDoc(collection(db, "reservas"), {
-      fecha,
-      hora,
-      oficina,
-      cliente,
-      telefono,
-      horasContratadas,
-      observaciones
-    });
-  } catch (error) {
-    alert("Error al reservar: " + error.message);
-  }
-}
- else {
-        const reservaId = celda.dataset.id;
-        if (!reservaId) return;
-        const docRef = doc(db, "reservas", reservaId);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          document.getElementById("modalCliente").textContent = "Cliente: " + data.cliente;
-          document.getElementById("modalTelefono").textContent = "Teléfono: " + (data.telefono || "No registrado");
-          document.getElementById("modalEmail").textContent = "Email: " + (data.email || "No registrado");
-          document.getElementById("modalObs").textContent = "Observaciones: " + (data.observaciones || "Ninguna");
-          reservaIdActual = reservaId;
-          modal.style.display = "block";
-        }
-      }
-    }
-
-    eliminarReservaBtn.addEventListener("click", async () => {
-      if (reservaIdActual && confirm("¿Estás seguro que querés eliminar esta reserva?")) {
-        await deleteDoc(doc(db, "reservas", reservaIdActual));
-        modal.style.display = "none";
-        reservaIdActual = null;
-      }
-    });
-
-    function escucharReservas() {
-  const reservasQuery = collection(db, "reservas");
-  onSnapshot(reservasQuery, (snapshot) => {
-    const reservas = {};
-    const conteoPorCliente = {};
-
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const key = `${data.fecha}-${data.hora}-${data.oficina}`;
-      reservas[key] = { cliente: data.cliente, id: doc.id };
-
-      if (data.cliente) {
-        conteoPorCliente[data.cliente] = (conteoPorCliente[data.cliente] || 0) + 1;
-      }
-    });
-
-    // Actualizar calendario solo si hay una fecha seleccionada
-    if (fechaInput.value) {
-      document.querySelectorAll('td.libre, td.ocupado').forEach(celda => {
-        const key = `${fechaInput.value}-${celda.dataset.hora}-${celda.dataset.oficina}`;
-        if (reservas[key]) {
-          celda.className = 'ocupado';
-          celda.textContent = reservas[key].cliente;
-          celda.dataset.id = reservas[key].id;
-        } else {
-          celda.className = 'libre';
-          celda.textContent = 'Libre';
-          delete celda.dataset.id;
-        }
-      });
-
-      const totalEnFecha = Object.keys(reservas).filter(k => k.startsWith(fechaInput.value)).length;
-      totalReservas.textContent = `Total de reservas activas en la fecha: ${totalEnFecha}`;
-    }
-
-    // Mostrar resumen por cliente (global)
-    const lista = document.getElementById("listaClientes");
-    lista.innerHTML = '';
-    for (const [cliente, horas] of Object.entries(conteoPorCliente)) {
-      const li = document.createElement('li');
-      li.textContent = `${cliente}: ${horas} hora(s) reservada(s) en total`;
-      lista.appendChild(li);
-    }
-  });
-}
+                                   
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <div class="container">
+                    <div class="row p-5">
+                        <div class="mx-auto col-md-8 col-lg-6 order-lg-last">
+                            <img class="img-fluid" src="./assets/img/roma/7.png" alt="">
+                        </div>
+                        <div class="col-lg-6 mb-0 d-flex align-items-center">
+                            <div class="text-align-left">
+                                <h1 class="h1">Coworking</h1>
+                                <h3 class="h2">👥 El espacio ideal para capacitaciones, reuniones y trabajo en equipo.</h3>
+                                <p>
+                                    Nuestras salas están preparadas para adaptarse a diferentes dinámicas de trabajo: formaciones, brainstorming, presentaciones y más. Con un ambiente cómodo y profesional, podés enfocarte en lo que realmente importa: compartir ideas y hacer crecer tu proyecto.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <div class="container">
+                    <div class="row p-5">
+                        <div class="mx-auto col-md-8 col-lg-6 order-lg-last">
+                            <img class="img-fluid" src="./assets/img/roma/6.png" alt="">
+                        </div>
+                        <div class="col-lg-6 mb-0 d-flex align-items-center">
+                            <div class="text-align-left">
+                                <h1 class="h1"> Bienvenido a ROMA</h1>
+                                <h3 class="h2">donde tu productividad encuentra su lugar. </h3>
+                                <p>
+                                    Un espacio flexible, moderno y pensado para adaptarse a tus necesidades. Ya sea para trabajar por horas, medio día o jornada completa, aquí encontrás el ambiente ideal para concentrarte y lograr tus objetivos.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a class="carousel-control-prev text-decoration-none w-auto ps-3" href="#template-mo-zay-hero-carousel" role="button" data-bs-slide="prev">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        <a class="carousel-control-next text-decoration-none w-auto pe-3" href="#template-mo-zay-hero-carousel" role="button" data-bs-slide="next">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+    </div>
+    <!-- End Banner Hero -->
 
 
-async function crearReservasRecurrentes() {
-  const nombre = document.getElementById("nombre").value.trim();
-  const telefono = document.getElementById("telefono").value.trim();
-  const horasContratadas = parseInt(document.getElementById("horasContratadas").value);
-  const observaciones = document.getElementById("observaciones").value.trim();
-  const oficina = document.getElementById("oficina").value;
-  const diaSemana = parseInt(document.getElementById("diaSemana").value);
-  const desde = document.getElementById("desde").value;
-  const hasta = document.getElementById("hasta").value;
-  const inicio = new Date(document.getElementById("inicio").value);
-  const fin = new Date(document.getElementById("fin").value);
+    
 
-  if (!nombre || !horasContratadas || isNaN(horasContratadas)) {
-    alert("Por favor completá el nombre y las horas contratadas correctamente.");
-    return;
-  }
+    <!-- Start Footer -->
+    <footer class="bg-dark" id="tempaltemo_footer">
+        <div class="container">
+            <div class="row">
 
-  // Calcular las horas ya usadas por este cliente
-  const reservasExistentes = await getDocs(query(collection(db, "reservas"), where("cliente", "==", nombre)));
-  let horasUsadas = reservasExistentes.size;
+                <div class="col-md-4 pt-5">
+                    <h2 class="h2 text-success border-bottom pb-3 border-light logo">ROMA Coworking</h2>
+                    <ul class="list-unstyled text-light footer-link-list">
+                        <li>
+                            <i class="fas fa-map-marker-alt fa-fw"></i>
+                            Rivadavia 1138
+                        </li>
+                        <li>
+                            <i class="fa fa-phone fa-fw"></i>
+                            <a class="text-decoration-none" href="tel:266-5010199">266-501-0199</a>
+                        </li>
+                        <li>
+                            <i class="fa fa-envelope fa-fw"></i>
+                            <a class="text-decoration-none" href="mailto:coworking.roma.sl@gmail.com">coworking.roma@gmail.com</a>
+                        </li>
+                    </ul>
+                </div>
 
-  const nuevasReservas = [];
+                
 
-  for (let fecha = new Date(inicio); fecha <= fin; fecha.setDate(fecha.getDate() + 1)) {
-    if (fecha.getDay() !== diaSemana) continue;
+            <div class="row text-light mb-4">
+                <div class="col-12 mb-3">
+                    <div class="w-100 my-3 border-top border-light"></div>
+                </div>
+                <div class="col-auto me-auto">
+                    <ul class="list-inline text-left footer-icons">
+                        <li class="list-inline-item border border-light rounded-circle text-center">
+                            <a class="text-light text-decoration-none" target="_blank" href="https://web.facebook.com/people/RomaCowork"><i class="fab fa-facebook-f fa-lg fa-fw"></i></a>
+                        </li>
+                        <li class="list-inline-item border border-light rounded-circle text-center">
+                            <a class="text-light text-decoration-none" target="_blank" href="https://www.instagram.com/coworking.roma/"><i class="fab fa-instagram fa-lg fa-fw"></i></a>
+                        </li>
+                        
+                        <li class="list-inline-item border border-light rounded-circle text-center">
+                            <a class="text-light text-decoration-none" target="_blank" href="https://www.linkedin.com/"><i class="fab fa-linkedin fa-lg fa-fw"></i></a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-auto">
+                    <label class="sr-only" for="subscribeEmail">Email address</label>
+                    
+                </div>
+            </div>
+        </div>
 
-    const desdeHora = parseInt(desde.split(":")[0]);
-    const hastaHora = parseInt(hasta.split(":")[0]);
+        <div class="w-100 bg-black py-3">
+            <div class="container">
+                <div class="row pt-2">
+                    <div class="col-12">
+                        <p class="text-left text-light">
+                            Copyright &copy; 2025
+                            | Designed by <a rel="sponsored" href="https://electrion.com.ar" target="_blank">electrion</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    for (let h = desdeHora; h < hastaHora; h++) {
-      if (horasUsadas >= horasContratadas) {
-        alert(`No se pueden agregar más horarios. "${nombre}" ya alcanzó su límite de ${horasContratadas} hora(s).`);
-        return;
-      }
+    </footer>
+    <!-- End Footer -->
 
-      const horaStr = `${h.toString().padStart(2, '0')}:00`;
-      nuevasReservas.push({
-        fecha: fecha.toISOString().split('T')[0],
-        hora: horaStr,
-        oficina,
-        cliente: nombre,
-        telefono,
-        horasContratadas,
-        observaciones
-      });
-
-      horasUsadas++;
-    }
-  }
-
-  // Agregar reservas
-  for (const reserva of nuevasReservas) {
-    await addDoc(collection(db, "reservas"), reserva);
-  }
-
-  alert(`Se crearon ${nuevasReservas.length} reserva(s) para ${nombre}.`);
-}
-
-
-    document.getElementById("crearRecurrentes").addEventListener("click", crearReservasRecurrentes);
-    fechaInput.addEventListener("change", actualizarCalendario);
-  </script>
+    <!-- Start Script -->
+    <script src="assets/js/jquery-1.11.0.min.js"></script>
+    <script src="assets/js/jquery-migrate-1.2.1.min.js"></script>
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/templatemo.js"></script>
+    <script src="assets/js/custom.js"></script>
+    <!-- End Script -->
 </body>
-<div id="resumenClientes" style="margin-top: 30px; background: #fff; padding: 15px; border: 1px solid #ccc; border-radius: 5px;">
-    <h3>Horas utilizadas por cliente</h3>
-    <ul id="listaClientes"></ul>
-  </div>
-  <div id="borrarCliente" style="margin-top: 30px; background: #fff; padding: 15px; border: 1px solid #ccc; border-radius: 5px;">
-    <h3>Eliminar todas las reservas de un cliente</h3>
-    <label for="clienteBorrar">Nombre del cliente:</label>
-    <input type="text" id="clienteBorrar" placeholder="Ej: Juan">
-    <button id="eliminarReservasCliente">Eliminar todas las reservas</button>
-  </div>
-  
+
 </html>

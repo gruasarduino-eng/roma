@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+</head>
+<body>
+  <h2>Iniciar sesión</h2>
+  <input type="email" id="email" placeholder="Correo electrónico" required><br>
+  <input type="password" id="password" placeholder="Contraseña" required><br>
+  <button onclick="login()">Ingresar</button>
+  <p id="error" style="color:red;"></p>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDoTNjnjkkgUBDaVI2To5ScA83_q6ZMy-s",
+      authDomain: "gamers-a1763.firebaseapp.com",
+      projectId: "gamers-a1763",
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    async function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+        const userEmail = userCredential.user.email;
+
+        // Admins definidos manualmente
+        const admins = ["slelectrion@gmail.com", "admin2@example.com"];
+
+        if (admins.includes(userEmail)) {
+          window.location.href = "calendario_admin.html";
+        } else {
+          window.location.href = "calendario_cliente.html";
+        }
+
+      } catch (error) {
+        document.getElementById("error").textContent = "Error: " + error.message;
+      }
+    }
+  </script>
+</body>
+</html>
